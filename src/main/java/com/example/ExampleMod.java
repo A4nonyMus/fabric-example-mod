@@ -1,24 +1,33 @@
 package com.example;
 
 import net.fabricmc.api.ModInitializer;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.item.ItemStack;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 
 public class ExampleMod implements ModInitializer {
-	public static final String MOD_ID = "modid";
 
-	// This logger is used to write text to the console and the log file.
-	// It is considered best practice to use your mod id as the logger's name.
-	// That way, it's clear which mod wrote info, warnings, and errors.
-	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+    @Override
+    public void onInitialize() {
 
-	@Override
-	public void onInitialize() {
-		// This code runs as soon as Minecraft is in a mod-load-ready state.
-		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution.
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 
-		LOGGER.info("Hello Fabric world!");
-	}
+            if (!(entity instanceof ServerPlayerEntity victim)) return;
+
+            DamageSource damage = source;
+
+            if (damage.getAttacker() instanceof ServerPlayerEntity killer) {
+
+                ItemStack weapon = killer.getMainHandStack();
+
+                if (weapon.getName().getString().equals("Netherite Spear")) {
+                    victim.networkHandler.disconnect(
+                        Text.literal("Killed by the Netherite Spear")
+                    );
+                }
+            }
+        });
+    }
 }
